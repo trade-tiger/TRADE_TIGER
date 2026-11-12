@@ -2152,14 +2152,13 @@
     }
 
     // دالة موحدة لجلب الموقع والطقس وتحديث الشاشتين معاً
-    
 async function updateAllWeather() {
     const elements = [
         { text: document.getElementById('weatherText'), icon: document.getElementById('weatherIconSpan') },
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
 
-    // 1. مرحلة التحميل السريعة والمستقرة
+    // 1. مرحلة التحميل السريعة
     elements.forEach(el => {
         if (el.text) {
             el.text.className = "text-lg sm:text-xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2184,8 +2183,7 @@ async function updateAllWeather() {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // طلب البيانات الشاملة بأعلى دقة متاحفة عالمياً من Open-Meteo
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weathercode,is_day,cloudcover,precipitation,rain,showers,snowfall&timezone=auto&_=${Date.now()}`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weathercode,is_day,cloudcover,precipitation&timezone=auto&_=${Date.now()}`;
         
         const res = await fetch(url);
         if (!res.ok) throw new Error("فشل الاتصال بخادم الطقس");
@@ -2195,53 +2193,58 @@ async function updateAllWeather() {
 
         const realTemp = Math.round(data.current.temperature_2m);
         const feelsLike = Math.round(data.current.apparent_temperature ?? realTemp);
-        const temp = Math.min(realTemp, feelsLike); // اعتماد الأبرد لتعكس واقع البرد الشتوي
+        const temp = Math.min(realTemp, feelsLike);
         
         const weatherCode = data.current.weathercode;
         const cloudCover = data.current.cloudcover ?? 0;
         const precipitation = data.current.precipitation ?? 0;
-        const hasSnow = (data.current.snowfall ?? 0) > 0 || weatherCode >= 71 && weatherCode <= 77;
-        const hasRain = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82);
         const isDayTime = data.current.is_day === 1;
+
+        // التصنيف الدقيق للحالات الجوية بالأولوية القصوى
+        const hasSnow = (weatherCode >= 71 && weatherCode <= 77) || temp <= 1;
+        const hasThunder = (weatherCode >= 95 && weatherCode <= 99); 
+        const hasRain = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82); 
+        const hasDust = (weatherCode === 6 || weatherCode === 7); 
+        const hasFog = (weatherCode >= 45 && weatherCode <= 48); 
 
         let weatherIcon = '☀️';
 
-        // 🧠 خوارزمية الأوزان الذكية المطلقة (Ultimate Weather Matrix)
-        if (!isDayTime) {
-            // --- الحالات الليلية ---
-            if (hasSnow || temp <= 1) {
-                weatherIcon = '❄️'; // ثلج وبرد قارس ليلي
-            } else if (hasRain || (weatherCode >= 51 && weatherCode <= 67)) {
-                weatherIcon = '🌧️'; // مطر ليلي
-            } else if (weatherCode >= 95) {
-                weatherIcon = '⛈️'; // رعد ومطر ليلي
-            } else if (weatherCode >= 45 && weatherCode <= 48) {
-                weatherIcon = '🌫️'; // ضباب ليلي
-            } else if (cloudCover > 20) {
-                weatherIcon = '☁️'; // سماء غائمة ليلاً
+        // 🧠 المنطق المرتب حسب الأولوية المطلقة للظواهر الجوية
+        if (hasSnow) {
+            weatherIcon = '❄️'; // ثلج وبرد قارس (الأولوية القصوى)
+        } else if (hasThunder && hasRain) {
+            weatherIcon = '⛈️'; // صواعق ومطر مع بعض
+        } else if (hasThunder) {
+            weatherIcon = '🌩️'; // صواعق وبرق
+        } else if (hasRain) {
+            weatherIcon = '🌧️'; // شتاء ومطر
+        } else if (hasDust) {
+            weatherIcon = '🌪️'; // أتربة وعواصف غبارية
+        } else if (hasFog) {
+            weatherIcon = '🌫️'; // ضباب وشبورة
+        } else if (!isDayTime) {
+            // --- حالات الليل الدقيقة ---
+            if (cloudCover >= 70) {
+                weatherIcon = '☁️'; // غيوم ليلية ثقيلة
+            } else if (cloudCover >= 15) {
+                weatherIcon = '🌙☁️'; // هلال مع سحابة واحدة فقط
             } else {
                 weatherIcon = '🌙'; // ليلة صافية تماماً
             }
         } else {
-            // --- الحالات النهارية ---
-            if (hasSnow || temp <= 2) {
-                weatherIcon = '❄️'; // ثلج / شتاء قارس وصقيع
-            } else if (weatherCode >= 95 && weatherCode <= 99) {
-                weatherIcon = '⛈️'; // عواصف رعدية وبرق
-            } else if (hasRain) {
-                weatherIcon = '🌧️'; // مطر شتوي
-            } else if (weatherCode >= 45 && weatherCode <= 48) {
-                weatherIcon = '🌫️'; // ضباب أو شبورة صباحية
-            } else if (cloudCover >= 80) {
-                weatherIcon = '☁️'; // غيوم كثيفة تامة (الجو مغيم بالكامل)
-            } else if (cloudCover >= 25 && cloudCover < 80) {
-                weatherIcon = '⛅'; // الشمس طالعة بس فيه غيوم والشمس مختفية شوية
+            // --- حالات النهار الدقيقة ---
+            if (cloudCover >= 80) {
+                weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
+            } else if (cloudCover >= 40) {
+                weatherIcon = '⛅'; // شمس خلف سحابة متوسطة
+            } else if (cloudCover >= 12) {
+                weatherIcon = '🌤️'; // شمس مع سحابة خفيفة رايقة
             } else {
                 weatherIcon = '☀️'; // شمس صافية ساطعة 100%
             }
         }
 
-        // 2. مرحلة النجاح وتحديث العناصر بسلاسة
+        // 2. مرحلة النجاح وتحديث العناصر
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2256,7 +2259,7 @@ async function updateAllWeather() {
     } catch (error) {
         console.warn("Weather Error:", error.message);
         
-        // 3. مرحلة الخطأ (تنبيه GPS)
+        // 3. مرحلة الخطأ
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
