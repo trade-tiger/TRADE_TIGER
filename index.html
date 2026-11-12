@@ -2152,7 +2152,7 @@
     }
 
     // دالة موحدة لجلب الموقع والطقس وتحديث الشاشتين معاً
-async function updateAllWeather() {
+    async function updateAllWeather() {
     const elements = [
         { text: document.getElementById('weatherText'), icon: document.getElementById('weatherIconSpan') },
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
@@ -2182,8 +2182,8 @@ async function updateAllWeather() {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // استبدل 'YOUR_WEATHERAPI_KEY' بمفتاح الـ API الخاص بك من WeatherAPI
-        const apiKey = 'YOUR_WEATHERAPI_KEY'; 
+        // مفتاح الـ API الخاص بك مضاف هنا
+        const apiKey = '9d993e28dd084902964210918261211'; 
         const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
         
         const res = await fetch(url);
@@ -2269,7 +2269,7 @@ async function updateAllWeather() {
         });
     }
 }
-
+    
 function setupWeatherClickEvents() {
     const allElements = [
         document.getElementById('weatherText'),
