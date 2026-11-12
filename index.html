@@ -2208,7 +2208,7 @@
 
         let weatherIcon = '☀️';
 
-        // 🧠 المنطق المرتب حسب الأولوية المطلقة
+        // 🧠 المنطق المرتب حسب الأولوية المطلقة (بعتبة 15% للحساسية العالية)
         if (hasSnow) {
             weatherIcon = '❄️'; // ثلج وبرد قارس
         } else if (hasThunder && hasRain) {
@@ -2222,22 +2222,22 @@
         } else if (hasFog) {
             weatherIcon = '🌫️'; // ضباب
         } else if (!isDayTime) {
-            // --- حالات الليل الدقيقة (مطابقة لتطبيق الطقس) ---
-            if (cloudCover >= 75) {
-                weatherIcon = '☁️'; // غيوم ليلية ثقيلة تغطي السماء
-            } else if (cloudCover >= 35) {
-                weatherIcon = '🌙☁️'; // غيوم جزئية واضحة مع القمر
+            // --- حالات الليل الدقيقة (عتبة 15%) ---
+            if (cloudCover >= 70) {
+                weatherIcon = '☁️'; // غيوم ليلية ثقيلة
+            } else if (cloudCover >= 15) {
+                weatherIcon = '🌙☁️'; // ليل مع سحابة خفيفة
             } else {
-                weatherIcon = '🌙'; // ليلة صافية (تتجاهل السحب الخفيفة جداً)
+                weatherIcon = '🌙'; // ليلة صافية تماماً
             }
         } else {
-            // --- حالات النهار الدقيقة (مطابقة لتطبيق الطقس) ---
+            // --- حالات النهار الدقيقة (عتبة 15%) ---
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
-            } else if (cloudCover >= 55) {
-                weatherIcon = '⛅'; // شمس خلف سحابة متوسطة
-            } else if (cloudCover >= 35) {
-                weatherIcon = '🌤️'; // شمس مع سحابة خفيفة
+            } else if (cloudCover >= 40) {
+                weatherIcon = '🌥️'; // شمس خلف سحابة متوسطة
+            } else if (cloudCover >= 15) {
+                weatherIcon = '⛅'; // شمس مع سحابة خفيفة
             } else {
                 weatherIcon = '☀️'; // شمس صافية ساطعة
             }
