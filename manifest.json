@@ -1,13 +1,13 @@
 {
-  "name": "TRADE TIGER",
-  "short_name": "TRADE_TIGER",
+  "name": "مذكرة المتداول TIGER",
+  "short_name": "TRADE TIGER",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#030303",
   "theme_color": "#030303",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "20260117_173629.png",
       "sizes": "512x512",
       "type": "image/png"
     }
