@@ -2182,7 +2182,6 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // مفتاح الـ API الخاص بك مضاف هنا
         const apiKey = '9d993e28dd084902964210918261211'; 
         const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
         
@@ -2223,24 +2222,24 @@
         } else if (hasFog) {
             weatherIcon = '🌫️'; // ضباب
         } else if (!isDayTime) {
-            // --- حالات الليل الدقيقة ---
-            if (cloudCover >= 70) {
-                weatherIcon = '☁️'; // غيوم ليلية ثقيلة
-            } else if (cloudCover >= 15) {
-                weatherIcon = '🌙☁️'; // هلال مع سحابة واحدة فقط
+            // --- حالات الليل الدقيقة (مطابقة لتطبيق الطقس) ---
+            if (cloudCover >= 75) {
+                weatherIcon = '☁️'; // غيوم ليلية ثقيلة تغطي السماء
+            } else if (cloudCover >= 35) {
+                weatherIcon = '🌙☁️'; // غيوم جزئية واضحة مع القمر
             } else {
-                weatherIcon = '🌙'; // ليلة صافية تماماً
+                weatherIcon = '🌙'; // ليلة صافية (تتجاهل السحب الخفيفة جداً)
             }
         } else {
-            // --- حالات النهار الدقيقة ---
+            // --- حالات النهار الدقيقة (مطابقة لتطبيق الطقس) ---
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
-            } else if (cloudCover >= 40) {
+            } else if (cloudCover >= 55) {
                 weatherIcon = '⛅'; // شمس خلف سحابة متوسطة
-            } else if (cloudCover >= 15) {
+            } else if (cloudCover >= 35) {
                 weatherIcon = '🌤️'; // شمس مع سحابة خفيفة
             } else {
-                weatherIcon = '☀️'; // شمس صافية ساطعة 100%
+                weatherIcon = '☀️'; // شمس صافية ساطعة
             }
         }
 
