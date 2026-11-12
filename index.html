@@ -695,11 +695,6 @@
       <span class="ticker-item">🛠️ تطوير مستمر: تعلم من أخطائك وسجل كل صفقاتك</span>
     </div>
   </div>
-
-<div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#030303]">
-  <img src="icon.png" alt="Logo" class="w-24 h-24 animate-pulse">
-  <span class="text-white mt-4 text-lg">جاري التحميل...</span>
-</div>
   
   <div id="deviceWrapper" class="flex flex-col min-h-screen w-full m-0 p-0">
 
@@ -4666,19 +4661,6 @@ let dateDisplay = firstDate ? `<span style="unicode-bidi: embed; display: inline
 setInterval(updateDateTime, 1000);
 
   </script>
-
-<script>
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const splash = document.getElementById('splash-screen');
-      if (splash) {
-        splash.style.opacity = '0';
-        splash.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => splash.remove(), 500);
-      }
-    }, 3000);
-  });
-</script>
         
 </body>
 </html>
