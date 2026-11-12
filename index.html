@@ -2159,17 +2159,17 @@ async function updateAllWeather() {
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
 
-    // فور الضغط: إظهار "جاري..." بنفس الحجم + إرجاع أيقونة الدبوس الحمراء
+    // 1. مرحلة التحميل السريعة والمستقرة
     elements.forEach(el => {
-        if(el.text) {
+        if (el.text) {
             el.text.className = "text-lg sm:text-xl font-black text-yellow-400 leading-tight whitespace-nowrap";
             el.text.textContent = 'جاري...';
         }
-        if(el.icon) {
+        if (el.icon) {
             el.icon.className = "hidden";
             el.icon.textContent = "";
         }
-});
+    });
 
     try {
         if (!navigator.geolocation) throw new Error("المتصفح لا يدعم GPS");
@@ -2184,50 +2184,90 @@ async function updateAllWeather() {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&_=${Date.now()}`);
+        // طلب البيانات الشاملة بأعلى دقة متاحفة عالمياً من Open-Meteo
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weathercode,is_day,cloudcover,precipitation,rain,showers,snowfall&timezone=auto&_=${Date.now()}`;
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("فشل الاتصال بخادم الطقس");
+        
         const data = await res.json();
-        
-        if (!data || !data.current) throw new Error("خطأ في الطقس");
+        if (!data || !data.current) throw new Error("بيانات الطقس غير متوفرة");
 
-        const temp = Math.round(data.current.temperature_2m);
+        const realTemp = Math.round(data.current.temperature_2m);
+        const feelsLike = Math.round(data.current.apparent_temperature ?? realTemp);
+        const temp = Math.min(realTemp, feelsLike); // اعتماد الأبرد لتعكس واقع البرد الشتوي
+        
         const weatherCode = data.current.weathercode;
-        
-        const isDayTime = new Date().getHours() >= 6 && new Date().getHours() < 18;
-        let weatherIcon = '';
+        const cloudCover = data.current.cloudcover ?? 0;
+        const precipitation = data.current.precipitation ?? 0;
+        const hasSnow = (data.current.snowfall ?? 0) > 0 || weatherCode >= 71 && weatherCode <= 77;
+        const hasRain = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82);
+        const isDayTime = data.current.is_day === 1;
 
-        if (weatherCode === 0) weatherIcon = isDayTime ? '☀️' : '🌙';
-        else if (weatherCode >= 1 && weatherCode <= 3) weatherIcon = isDayTime ? '⛅' : '☁️';
-        else if (weatherCode >= 45 && weatherCode <= 48) weatherIcon = '🌫️';
-        else if (weatherCode >= 51 && weatherCode <= 67) weatherIcon = '🌧️';
-        else if (weatherCode >= 71 && weatherCode <= 77) weatherIcon = '❄️';
-        else if (weatherCode >= 95 && weatherCode <= 99) weatherIcon = '⛈️';
-        else weatherIcon = isDayTime ? '🌤️' : '🌙';
+        let weatherIcon = '☀️';
 
-        // عند نجاح جلب البيانات: عرض رقم الحرارة وإيموشن الطقس بحجم كبير
+        // 🧠 خوارزمية الأوزان الذكية المطلقة (Ultimate Weather Matrix)
+        if (!isDayTime) {
+            // --- الحالات الليلية ---
+            if (hasSnow || temp <= 1) {
+                weatherIcon = '❄️'; // ثلج وبرد قارس ليلي
+            } else if (hasRain || (weatherCode >= 51 && weatherCode <= 67)) {
+                weatherIcon = '🌧️'; // مطر ليلي
+            } else if (weatherCode >= 95) {
+                weatherIcon = '⛈️'; // رعد ومطر ليلي
+            } else if (weatherCode >= 45 && weatherCode <= 48) {
+                weatherIcon = '🌫️'; // ضباب ليلي
+            } else if (cloudCover > 20) {
+                weatherIcon = '☁️'; // سماء غائمة ليلاً
+            } else {
+                weatherIcon = '🌙'; // ليلة صافية تماماً
+            }
+        } else {
+            // --- الحالات النهارية ---
+            if (hasSnow || temp <= 2) {
+                weatherIcon = '❄️'; // ثلج / شتاء قارس وصقيع
+            } else if (weatherCode >= 95 && weatherCode <= 99) {
+                weatherIcon = '⛈️'; // عواصف رعدية وبرق
+            } else if (hasRain) {
+                weatherIcon = '🌧️'; // مطر شتوي
+            } else if (weatherCode >= 45 && weatherCode <= 48) {
+                weatherIcon = '🌫️'; // ضباب أو شبورة صباحية
+            } else if (cloudCover >= 80) {
+                weatherIcon = '☁️'; // غيوم كثيفة تامة (الجو مغيم بالكامل)
+            } else if (cloudCover >= 25 && cloudCover < 80) {
+                weatherIcon = '⛅'; // الشمس طالعة بس فيه غيوم والشمس مختفية شوية
+            } else {
+                weatherIcon = '☀️'; // شمس صافية ساطعة 100%
+            }
+        }
+
+        // 2. مرحلة النجاح وتحديث العناصر بسلاسة
         elements.forEach(el => {
-            if(el.text) {
+            if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
                 el.text.textContent = `${temp}°C`;
             }
-            if(el.icon) {
-                el.icon.className = "text-2xl sm:text-3xl leading-none shrink-0 not-italic";
+            if (el.icon) {
+                el.icon.className = "text-2xl sm:text-3xl leading-none shrink-0 not-italic inline-block";
                 el.icon.textContent = weatherIcon;
             }
         });
 
     } catch (error) {
-    // إذا حدث خطأ: يعيد نص "فعل GPS" والأيقونة بالمقاسات المتناسقة
-    elements.forEach(el => {
-        if(el.text) {
-            el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
-            el.text.textContent = 'فعل GPS';
-        }
-        if(el.icon) {
-            el.icon.className = "fa-solid fa-location-dot text-red-500 text-2xl sm:text-3xl shrink-0";
-            el.icon.textContent = "";
-        }
-    });
-}
+        console.warn("Weather Error:", error.message);
+        
+        // 3. مرحلة الخطأ (تنبيه GPS)
+        elements.forEach(el => {
+            if (el.text) {
+                el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
+                el.text.textContent = 'فعل GPS';
+            }
+            if (el.icon) {
+                el.icon.className = "fa-solid fa-location-dot text-red-500 text-2xl sm:text-3xl shrink-0 inline-block";
+                el.icon.textContent = "";
+            }
+        });
+    }
 }
 
 function setupWeatherClickEvents() {
