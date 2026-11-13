@@ -2151,9 +2151,8 @@
     }
 
     // دالة موحدة لجلب الموقع والطقس وتحديث الشاشتين معاً
-    
     async function updateAllWeather() {
-        const elements = [
+    const elements = [
         { text: document.getElementById('weatherText'), icon: document.getElementById('weatherIconSpan') },
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
@@ -2223,18 +2222,15 @@
         } else if (hasFog) {
             weatherIcon = '🌫️'; // ضباب
         } else if (!isDayTime) {
-        
-        
             // --- حالات الليل الدقيقة ---
             if (cloudCover >= 70) {
                 weatherIcon = '☁️'; // غيوم ليلية ثقيلة
             } else if (cloudCover >= 15) {
                 weatherIcon = '🌙☁️'; // هلال مع سحابة واحدة فقط
             } else {
-                weatherIcon = '🌙'; // ليلة صافية تماماً }
-            
+                weatherIcon = '🌙'; // ليلة صافية تماماً
+            }
         } else {
-        
             // --- حالات النهار الدقيقة ---
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
