@@ -2197,20 +2197,25 @@
         const conditionCode = data.current.condition.code; 
         const isDayTime = data.current.is_day === 1;
         const cloudCover = data.current.cloud ?? 0;
-        const precip = data.current.precip_mm ?? 0;
         const humidity = data.current.humidity ?? 0;
         const windKph = data.current.wind_kph ?? 0;
 
-        // --- مصفوفات التحقق من الحالات الجوية بدقة ---
+        // --- مصفوفات التحقق من الحالات الجوية بدقة صارمة ---
         const snowCodes = [1066, 1069, 1072, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1261, 1264, 1279, 1282];
         const thunderCodes = [1087, 1273, 1276];
-        const rainCodes = [1063, 1072, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246];
+        
+        // الأكواد الخاصة بالأمطار الحقيقية فقط (منع أي تداخل مع الغيوم العادية)
+        const rainCodes = [
+            1063, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 
+            1240, 1243, 1246, 1249, 1250, 1252, 1273, 1276
+        ];
+        
         const fogCodes = [1030, 1135, 1147];
 
-        // تقييم الظروف بناءً على الأكواد والمعطيات الفعلية فقط
+        // تقييم الظروف بناءً على أكواد الطقس المعتمدة فقط
         const hasSnow = snowCodes.includes(conditionCode) || temp <= 1;
         const hasThunder = thunderCodes.includes(conditionCode);
-        const hasRain = precip >= 0.2 || rainCodes.includes(conditionCode);
+        const hasRain = rainCodes.includes(conditionCode); // تعتمد على كود المطر الرسمي فقط لتجنب الأخطاء
         const hasThunderAndRain = hasThunder && hasRain;
         const hasRainWithSun = hasRain && cloudCover < 50 && isDayTime;
         const hasDust = humidity < 20 && windKph > 28;
@@ -2218,7 +2223,7 @@
 
         let weatherIcon = '☀️';
 
-        // 🧠 المنطق المرتب بدقة متناهية (من الظواهر الجوية إلى حالات الليل والنهار)
+        // 🧠 المنطق المرتب بدقة تامة لضمان عدم ظهور المطر إلا في حالته الحقيقية
         if (hasSnow) {
             weatherIcon = '❄️'; // ثلج
         } else if (hasThunderAndRain) {
@@ -2228,7 +2233,7 @@
         } else if (hasRainWithSun) {
             weatherIcon = '🌦️'; // مطر مع شمس (نهاراً)
         } else if (hasRain) {
-            weatherIcon = '🌧️'; // مطر وشتاء
+            weatherIcon = '🌧️'; // مطر وشتاء حقيقي
         } else if (hasDust) {
             weatherIcon = '🌪️'; // أتربة وعواصف
         } else if (hasFog) {
@@ -2244,7 +2249,8 @@
                 weatherIcon = '🌙'; // ليلة صافية
             }
         } else {
-            // --- حالات النهار المرتبة تصاعدياً حسب نسبة الصفاء ---
+          
+            // --- حالات النهار المرتبة تصاعدياً حسب نسبة الصفاء والغيوم ---
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس
             } else if (cloudCover >= 50) {
