@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="manifest" href="manifest.json">
+  
   <!-- مكتبات تحويل وتصدير الـ PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -52,8 +52,8 @@
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
     }
-    
-      {
+
+    * {
       box-sizing: border-box;
       -webkit-user-select: text !important;
       -moz-user-select: text !important;
@@ -695,7 +695,7 @@
       <span class="ticker-item">🛠️ تطوير مستمر: تعلم من أخطائك وسجل كل صفقاتك</span>
     </div>
   </div>
-  
+
   <div id="deviceWrapper" class="flex flex-col min-h-screen w-full m-0 p-0">
 
     <!-- ==================== LOCK SCREEN MODAL ==================== -->
@@ -918,24 +918,23 @@
     <span class="text-yellow-400 font-bold text-xl sm:text-4xl">|</span>
     <span style="direction: ltr;" class="font-mono font-black tabular-nums text-xl sm:text-2xl md:text-3xl">
         <span id="homeYear">جاري</span>-<span id="homeMonth">التحميل</span>-<span id="homeDay">...</span>
-</div>
     </div>
 
         <!-- 4. الأزرار الثلاثة -->
     <nav class="grid grid-cols-3 gap-4 w-full rounded-2xl border-2 border-yellow-500/80 bg-black p-4 shadow-xl">
       <!-- الزر 1: القواعد وإدارة المال -->
-      <button type="button" onclick="activateTab('page1')" id="tab-page1" class="w-full py-[1.875rem] px-4 rounded-xl font-black text-xl sm:text-2xl md:text-[2.6rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3.5 cursor-pointer shadow-md text-center antialiased tracking-wide">
-        <i class="fa-solid fa-book-bookmark text-2xl sm:text-3xl md:text-[2.6rem] shrink-0"></i> <span class="truncate">القواعد وإدارة المال</span>
+      <button type="button" onclick="activateTab('page1')" id="tab-page1" class="w-full py-[1.875rem] px-2 rounded-xl font-black text-2xl sm:text-3xl md:text-[3.35rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 cursor-pointer shadow-md text-center antialiased tracking-wide">
+        <i class="fa-solid fa-book-bookmark text-3xl sm:text-4xl md:text-[3.35rem] shrink-0"></i> <span class="truncate">القواعد وإدارة المال</span>
       </button>
       
       <!-- الزر 2: الصفقات اليومية -->
-      <button type="button" onclick="activateTab('page2')" id="tab-page2" class="w-full py-[1.875rem] px-4 rounded-xl font-black text-xl sm:text-2xl md:text-[2.6rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3.5 cursor-pointer shadow-md text-center antialiased tracking-wide">
-        <i class="fa-solid fa-chart-line text-2xl sm:text-3xl md:text-[2.6rem] shrink-0"></i> <span class="truncate">الصفقات اليومية</span>
+      <button type="button" onclick="activateTab('page2')" id="tab-page2" class="w-full py-[1.875rem] px-2 rounded-xl font-black text-2xl sm:text-3xl md:text-[3.35rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 cursor-pointer shadow-md text-center antialiased tracking-wide">
+        <i class="fa-solid fa-chart-line text-3xl sm:text-4xl md:text-[3.35rem] shrink-0"></i> <span class="truncate">الصفقات اليومية</span>
       </button>
 
       <!-- الزر 3: التقييم الشامل -->
-      <button type="button" onclick="activateTab('page3')" id="tab-page3" class="w-full py-[1.875rem] px-4 rounded-xl font-black text-xl sm:text-2xl md:text-[2.6rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3.5 cursor-pointer shadow-md text-center antialiased tracking-wide">
-        <i class="fa-solid fa-trophy text-2xl sm:text-3xl md:text-[2.6rem] shrink-0"></i> <span class="truncate">التقييم الشامل</span>
+      <button type="button" onclick="activateTab('page3')" id="tab-page3" class="w-full py-[1.875rem] px-2 rounded-xl font-black text-2xl sm:text-3xl md:text-[3.35rem] transition-all duration-200 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 cursor-pointer shadow-md text-center antialiased tracking-wide">
+        <i class="fa-solid fa-trophy text-3xl sm:text-4xl md:text-[3.35rem] shrink-0"></i> <span class="truncate">التقييم الشامل</span>
       </button>
     </nav>
 
@@ -1137,9 +1136,9 @@
               <button type="button" id="clearCurrentDayBtn" onclick="clearCurrentDayData()" class="bg-gradient-to-r from-red-600 to-rose-700 text-white font-black px-6 py-4 rounded-xl text-lg md:text-xl shadow-lg hover:brightness-110 transition flex items-center justify-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-trash-can text-xl"></i> <span>مسح تداولات اليوم</span>
               </button>
-              <button type="button" id="clearEntireMonthBtn" onclick="clearEntireMonthData()" class="bg-gradient-to-r from-red-600 to-rose-700 text-white font-black px-6 py-4 rounded-xl text-lg md:text-xl shadow-lg hover:brightness-110 transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-trash-can text-xl"></i> <span>مسح تداول الشهر بالكامل</span>
-              </button>
+              <button type="button" id="clearEntireMonthBtn" onclick="clearEntireMonthData()" class="bg-gradient-to-r from-red-600 to-rose-700 text-white font-black px-5 py-4 rounded-xl text-lg md:text-xl whitespace-nowrap shrink-0 shadow-lg hover:brightness-110 transition flex items-center justify-center gap-2 cursor-pointer">
+  <i class="fa-solid fa-trash-can text-xl shrink-0"></i> <span>مسح تداولات الشهر بالكامل</span>
+</button>
               <button type="button" onclick="previewSingleDayPDF()" class="col-span-1 sm:col-span-2 lg:col-span-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-black font-black px-6 py-4 rounded-xl text-lg md:text-xl shadow-xl hover:brightness-110 transition flex items-center justify-center gap-2.5 cursor-pointer">
                 <i class="fa-solid fa-download text-xl"></i> <span>تنزيل الملف (اليوم الحالي)</span>
               </button>
@@ -2152,22 +2151,24 @@
     }
 
     // دالة موحدة لجلب الموقع والطقس وتحديث الشاشتين معاً
-    async function updateAllWeather() {
+    
+async function updateAllWeather() {
     const elements = [
         { text: document.getElementById('weatherText'), icon: document.getElementById('weatherIconSpan') },
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
 
+    // فور الضغط: إظهار "جاري..." بنفس الحجم + إرجاع أيقونة الدبوس الحمراء
     elements.forEach(el => {
-        if (el.text) {
+        if(el.text) {
             el.text.className = "text-lg sm:text-xl font-black text-yellow-400 leading-tight whitespace-nowrap";
             el.text.textContent = 'جاري...';
         }
-        if (el.icon) {
+        if(el.icon) {
             el.icon.className = "hidden";
             el.icon.textContent = "";
         }
-    });
+});
 
     try {
         if (!navigator.geolocation) throw new Error("المتصفح لا يدعم GPS");
@@ -2182,93 +2183,52 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        const apiKey = '9d993e28dd084902964210918261211'; 
-        const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
-        
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("فشل الاتصال بمزود الطقس");
-        
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&_=${Date.now()}`);
         const data = await res.json();
-        if (!data || !data.current) throw new Error("بيانات الطقس غير متوفرة");
+        
+        if (!data || !data.current) throw new Error("خطأ في الطقس");
 
-        const temp = Math.round(data.current.temp_c);
-        const conditionCode = data.current.condition.code; 
-        const isDayTime = data.current.is_day === 1;
-        const cloudCover = data.current.cloud ?? 0;
-        const precip = data.current.precip_mm ?? 0;
-        const humidity = data.current.humidity ?? 0;
-        const windKph = data.current.wind_kph ?? 0;
+        const temp = Math.round(data.current.temperature_2m);
+        const weatherCode = data.current.weathercode;
+        
+        const isDayTime = new Date().getHours() >= 6 && new Date().getHours() < 18;
+        let weatherIcon = '';
 
-        // التصنيف الدقيق حسب الأولويات
-        const hasSnow = [1066, 1069, 1072, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1261, 1264, 1279, 1282].includes(conditionCode) || temp <= 1;
-        const hasThunder = [1087, 1273, 1276].includes(conditionCode);
-        const hasRain = precip > 0 || [1063, 1072, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246].includes(conditionCode);
-        const hasFog = [1030, 1135, 1147].includes(conditionCode);
-        const hasDust = humidity < 25 && windKph > 20;
+        if (weatherCode === 0) weatherIcon = isDayTime ? '☀️' : '🌙';
+        else if (weatherCode >= 1 && weatherCode <= 3) weatherIcon = isDayTime ? '⛅' : '☁️';
+        else if (weatherCode >= 45 && weatherCode <= 48) weatherIcon = '🌫️';
+        else if (weatherCode >= 51 && weatherCode <= 67) weatherIcon = '🌧️';
+        else if (weatherCode >= 71 && weatherCode <= 77) weatherIcon = '❄️';
+        else if (weatherCode >= 95 && weatherCode <= 99) weatherIcon = '⛈️';
+        else weatherIcon = isDayTime ? '🌤️' : '🌙';
 
-        let weatherIcon = '☀️';
-
-        // 🧠 المنطق المرتب حسب الأولوية المطلقة (بعتبة 15% للحساسية العالية)
-        if (hasSnow) {
-            weatherIcon = '❄️'; // ثلج وبرد قارس
-        } else if (hasThunder && hasRain) {
-            weatherIcon = '⛈️'; // صواعق ومطر
-        } else if (hasThunder) {
-            weatherIcon = '🌩️'; // صواعق وبرق
-        } else if (hasRain) {
-            weatherIcon = '🌧️'; // شتاء ومطر
-        } else if (hasDust) {
-            weatherIcon = '🌪️'; // أتربة وعواصف
-        } else if (hasFog) {
-            weatherIcon = '🌫️'; // ضباب
-        } else if (!isDayTime) {
-            // --- حالات الليل الدقيقة (عتبة 15%) ---
-            if (cloudCover >= 70) {
-                weatherIcon = '☁️'; // غيوم ليلية ثقيلة
-            } else if (cloudCover >= 15) {
-                weatherIcon = '🌙☁️'; // ليل مع سحابة خفيفة
-            } else {
-                weatherIcon = '🌙'; // ليلة صافية تماماً
-            }
-        } else {
-            // --- حالات النهار الدقيقة (عتبة 15%) ---
-            if (cloudCover >= 80) {
-                weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
-            } else if (cloudCover >= 40) {
-                weatherIcon = '🌥️'; // شمس خلف سحابة متوسطة
-            } else if (cloudCover >= 15) {
-                weatherIcon = '⛅'; // شمس مع سحابة خفيفة
-            } else {
-                weatherIcon = '☀️'; // شمس صافية ساطعة
-            }
-        }
-
+        // عند نجاح جلب البيانات: عرض رقم الحرارة وإيموشن الطقس بحجم كبير
         elements.forEach(el => {
-            if (el.text) {
+            if(el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
                 el.text.textContent = `${temp}°C`;
             }
-            if (el.icon) {
-                el.icon.className = "text-2xl sm:text-3xl leading-none shrink-0 not-italic inline-block";
+            if(el.icon) {
+                el.icon.className = "text-2xl sm:text-3xl leading-none shrink-0 not-italic";
                 el.icon.textContent = weatherIcon;
             }
         });
 
     } catch (error) {
-        console.warn("Weather Error:", error.message);
-        elements.forEach(el => {
-            if (el.text) {
-                el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
-                el.text.textContent = 'فعل GPS';
-            }
-            if (el.icon) {
-                el.icon.className = "fa-solid fa-location-dot text-red-500 text-2xl sm:text-3xl shrink-0 inline-block";
-                el.icon.textContent = "";
-            }
-        });
-    }
+    // إذا حدث خطأ: يعيد نص "فعل GPS" والأيقونة بالمقاسات المتناسقة
+    elements.forEach(el => {
+        if(el.text) {
+            el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
+            el.text.textContent = 'فعل GPS';
+        }
+        if(el.icon) {
+            el.icon.className = "fa-solid fa-location-dot text-red-500 text-2xl sm:text-3xl shrink-0";
+            el.icon.textContent = "";
+        }
+    });
 }
-    
+}
+
 function setupWeatherClickEvents() {
     const allElements = [
         document.getElementById('weatherText'),
@@ -4700,6 +4660,5 @@ let dateDisplay = firstDate ? `<span style="unicode-bidi: embed; display: inline
 setInterval(updateDateTime, 1000);
 
   </script>
-        
 </body>
 </html>
