@@ -2157,6 +2157,7 @@
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
 
+    // إظهار حالة التحميل المبدئية
     elements.forEach(el => {
         if (el.text) {
             el.text.className = "text-lg sm:text-xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2171,7 +2172,7 @@
     try {
         if (!navigator.geolocation) throw new Error("المتصفح لا يدعم GPS");
 
-        // جلب الإحداثيات بأعلى دقة ومنع التخزين المؤقت تماماً للحصول على الطقس الفعلي
+        // جلب الإحداثيات بأعلى دقة ممكنة وبدون الاعتماد على أي بيانات مخزنة
         const position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { 
                 timeout: 7000,              
@@ -2200,43 +2201,52 @@
         const humidity = data.current.humidity ?? 0;
         const windKph = data.current.wind_kph ?? 0;
 
-        // التصنيف الدقيق حسب الأولويات
-        const hasSnow = [1066, 1069, 1072, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1261, 1264, 1279, 1282].includes(conditionCode) || temp <= 1;
-        const hasThunder = [1087, 1273, 1276].includes(conditionCode);
-        const hasRain = precip > 0 || [1063, 1072, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246].includes(conditionCode);
-        const hasFog = [1030, 1135, 1147].includes(conditionCode);
-        const hasDust = humidity < 25 && windKph > 20;
+        // --- مصفوفات التحقق من الحالات الجوية بدقة ---
+        const snowCodes = [1066, 1069, 1072, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1261, 1264, 1279, 1282];
+        const thunderCodes = [1087, 1273, 1276];
+        const rainCodes = [1063, 1072, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246];
+        const fogCodes = [1030, 1135, 1147];
+
+        // تقييم الظروف بناءً على الأكواد والمعطيات الفعلية فقط
+        const hasSnow = snowCodes.includes(conditionCode) || temp <= 1;
+        const hasThunder = thunderCodes.includes(conditionCode);
+        const hasRain = precip >= 0.2 || rainCodes.includes(conditionCode);
+        const hasThunderAndRain = hasThunder && hasRain;
+        const hasRainWithSun = hasRain && cloudCover < 50 && isDayTime;
+        const hasDust = humidity < 20 && windKph > 28;
+        const hasFog = fogCodes.includes(conditionCode);
 
         let weatherIcon = '☀️';
 
-        // 🧠 المنطق المرتب بالترتيب الصحيح (من العواصف والثلج والمطر إلى الغيوم والشمس)
+        // 🧠 المنطق المرتب بدقة متناهية (من الظواهر الجوية إلى حالات الليل والنهار)
         if (hasSnow) {
             weatherIcon = '❄️'; // ثلج
-        } else if (hasThunder && hasRain) {
+        } else if (hasThunderAndRain) {
             weatherIcon = '⛈️'; // عاصفة رعدية مع مطر
         } else if (hasThunder) {
             weatherIcon = '🌩️'; // صواعق وبرق
-        } else if (hasRain && cloudCover < 50 && isDayTime) {
+        } else if (hasRainWithSun) {
             weatherIcon = '🌦️'; // مطر مع شمس (نهاراً)
         } else if (hasRain) {
             weatherIcon = '🌧️'; // مطر وشتاء
         } else if (hasDust) {
-            weatherIcon = '🌪️'; // أتربة
+            weatherIcon = '🌪️'; // أتربة وعواصف
         } else if (hasFog) {
             weatherIcon = '🌫️'; // ضباب
+          
         } else if (!isDayTime) {
-            // --- حالات الليل ---
+            // --- حالات الليل الدقيقة ---
             if (cloudCover >= 70) {
-                weatherIcon = '☁️'; 
+                weatherIcon = '☁️'; // غيوم ليلية كثيفة
             } else if (cloudCover >= 15) {
-                weatherIcon = '🌙☁️'; 
+                weatherIcon = '🌙☁️'; // ليل مع سحب متفرقة
             } else {
-                weatherIcon = '🌙'; 
+                weatherIcon = '🌙'; // ليلة صافية
             }
         } else {
-            // --- حالات النهار بالترتيب المطلوب ---
+            // --- حالات النهار المرتبة تصاعدياً حسب نسبة الصفاء ---
             if (cloudCover >= 80) {
-                weatherIcon = '☁️'; // غيوم كثيفة
+                weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس
             } else if (cloudCover >= 50) {
                 weatherIcon = '🌥️'; // شمس خلف سحابة متوسطة
             } else if (cloudCover >= 25) {
@@ -2248,6 +2258,7 @@
             }
         }
 
+        // تحديث عناصر الواجهة بالنتائج المؤكدة
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
