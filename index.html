@@ -2171,17 +2171,18 @@
     try {
         if (!navigator.geolocation) throw new Error("المتصفح لا يدعم GPS");
 
+        // جلب الإحداثيات بأعلى دقة ومنع التخزين المؤقت تماماً للحصول على الطقس الفعلي
         const position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                timeout: 10000,          
-                enableHighAccuracy: true 
+                timeout: 7000,              
+                enableHighAccuracy: true,   
+                maximumAge: 0               
             });
         });
 
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // مفتاح الـ API الخاص بك مضاف هنا
         const apiKey = '9d993e28dd084902964210918261211'; 
         const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
         
@@ -2208,38 +2209,42 @@
 
         let weatherIcon = '☀️';
 
-        // 🧠 المنطق المرتب حسب الأولوية المطلقة
+        // 🧠 المنطق المرتب بالترتيب الصحيح (من العواصف والثلج والمطر إلى الغيوم والشمس)
         if (hasSnow) {
-            weatherIcon = '❄️'; // ثلج وبرد قارس
+            weatherIcon = '❄️'; // ثلج
         } else if (hasThunder && hasRain) {
-            weatherIcon = '⛈️'; // صواعق ومطر
+            weatherIcon = '⛈️'; // عاصفة رعدية مع مطر
         } else if (hasThunder) {
             weatherIcon = '🌩️'; // صواعق وبرق
+        } else if (hasRain && cloudCover < 50 && isDayTime) {
+            weatherIcon = '🌦️'; // مطر مع شمس (نهاراً)
         } else if (hasRain) {
-            weatherIcon = '🌧️'; // شتاء ومطر
+            weatherIcon = '🌧️'; // مطر وشتاء
         } else if (hasDust) {
-            weatherIcon = '🌪️'; // أتربة وعواصف
+            weatherIcon = '🌪️'; // أتربة
         } else if (hasFog) {
             weatherIcon = '🌫️'; // ضباب
         } else if (!isDayTime) {
-            // --- حالات الليل الدقيقة ---
+            // --- حالات الليل ---
             if (cloudCover >= 70) {
-                weatherIcon = '☁️'; // غيوم ليلية ثقيلة
+                weatherIcon = '☁️'; 
             } else if (cloudCover >= 15) {
-                weatherIcon = '🌙☁️'; // هلال مع سحابة واحدة فقط
+                weatherIcon = '🌙☁️'; 
             } else {
-                weatherIcon = '🌙'; // ليلة صافية تماماً
+                weatherIcon = '🌙'; 
             }
         } else {
-            // --- حالات النهار الدقيقة ---
+            // --- حالات النهار بالترتيب المطلوب ---
             if (cloudCover >= 80) {
-                weatherIcon = '☁️'; // غيوم كثيفة تحجب الشمس تماماً
-            } else if (cloudCover >= 40) {
-                weatherIcon = '⛅'; // شمس خلف سحابة متوسطة
-            } else if (cloudCover >= 15) {
-                weatherIcon = '🌤️'; // شمس مع سحابة خفيفة
+                weatherIcon = '☁️'; // غيوم كثيفة
+            } else if (cloudCover >= 50) {
+                weatherIcon = '🌥️'; // شمس خلف سحابة متوسطة
+            } else if (cloudCover >= 25) {
+                weatherIcon = '⛅'; // شمس غائمة جزئياً
+            } else if (cloudCover >= 10) {
+                weatherIcon = '🌤️'; // شمس خلف سحابة خفيفة
             } else {
-                weatherIcon = '☀️'; // شمس صافية ساطعة 100%
+                weatherIcon = '☀️'; // شمس صافية ساطعة
             }
         }
 
