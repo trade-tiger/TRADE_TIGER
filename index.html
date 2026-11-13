@@ -2151,28 +2151,15 @@
     }
 
     // دالة موحدة لجلب الموقع والطقس وتحديث الشاشتين معاً
-    async function updateAllWeather() {
+  async function updateAllWeather() {
     const elements = [
         { text: document.getElementById('weatherText'), icon: document.getElementById('weatherIconSpan') },
         { text: document.getElementById('lockWeatherText'), icon: document.getElementById('lockWeatherIconSpan') }
     ];
 
-    // إظهار حالة التحميل المبدئية
-    elements.forEach(el => {
-        if (el.text) {
-            el.text.className = "text-lg sm:text-xl font-black text-yellow-400 leading-tight whitespace-nowrap";
-            el.text.textContent = 'جاري...';
-        }
-        if (el.icon) {
-            el.icon.className = "hidden";
-            el.icon.textContent = "";
-        }
-    });
-
     try {
-        if (!navigator.geolocation) throw new Error("المتصفح لا يدعم GPS");
+        if (!navigator.geolocation) throw new Error("GPS غير مدعوم");
 
-        // جلب الإحداثيات الحالية من الـ GPS حصراً وبأعلى دقة
         const position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { 
                 timeout: 10000,              
@@ -2184,41 +2171,39 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        const apiKey = '9d993e28dd084902964210918261211'; 
-        const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&aqi=no`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m`;
         
         const res = await fetch(url);
-        if (!res.ok) throw new Error("فشل الاتصال بمزود الطقس");
+        if (!res.ok) throw new Error("فشل الاتصال");
         
         const data = await res.json();
-        if (!data || !data.current) throw new Error("بيانات الطقس غير متوفرة");
+        if (!data || !data.current) throw new Error("بيانات غير متوفرة");
 
-        const temp = Math.round(data.current.temp_c);
-        const conditionCode = data.current.condition.code; 
-        const isDayTime = data.current.is_day === 1; // يتغير تلقائياً مع أوقات الشروق والغروب طوال العام
-        const cloudCover = data.current.cloud ?? 0;
-        const precip = data.current.precip_mm ?? 0;
-        const humidity = data.current.humidity ?? 0;
-        const windKph = data.current.wind_kph ?? 0;
+        const temp = Math.round(data.current.temperature_2m);
+        const weatherCode = data.current.weather_code; 
+        const isDayTime = data.current.is_day === 1;
+        const cloudCover = data.current.cloud_cover ?? 0;
+        const precip = data.current.precipitation ?? 0;
+        const humidity = data.current.relative_humidity_2m ?? 0;
+        const windKph = data.current.wind_speed_10m ?? 0;
 
-        // مصفوفات الأكواد الخاصة بـ WeatherAPI
-        const snowCodes = [1066, 1069, 1072, 1114, 1117, 1210, 1213, 1216, 1219, 1222, 1225, 1255, 1258, 1261, 1264, 1279, 1282];
-        const thunderCodes = [1087, 1273, 1276];
-        const rainCodes = [1063, 1150, 1153, 1180, 1183, 1186, 1189, 1192, 1195, 1198, 1201, 1240, 1243, 1246];
-        const fogCodes = [1030, 1135, 1147];
+        // أكواد WMO المعيارية لـ Open-Meteo
+        const snowCodes = [71, 73, 75, 77, 85, 86];
+        const thunderCodes = [95, 96, 99];
+        const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
+        const fogCodes = [45, 48];
 
-        // شروط قوية وصارمة للغاية لضمان عدم ظهور الأيقونات بشكل خاطئ
-        const hasSnow = snowCodes.includes(conditionCode) && temp <= 0;
-        const hasThunder = thunderCodes.includes(conditionCode);
-        const hasRain = (precip >= 1.0 || rainCodes.includes(conditionCode)); // لا تظهر أمطار إلا إذا كانت فعلية ومؤثرة
+        // شروط صارمة ودقيقة للغاية لمنع الأيقونات الخاطئة
+        const hasSnow = snowCodes.includes(weatherCode) && temp <= 0;
+        const hasThunder = thunderCodes.includes(weatherCode);
+        const hasRain = (precip >= 1.0 || rainCodes.includes(weatherCode)); 
         const hasThunderAndRain = hasThunder && hasRain;
         const hasRainWithSun = hasRain && cloudCover < 50 && isDayTime;
         const hasDust = humidity < 20 && windKph > 35;
-        const hasFog = fogCodes.includes(conditionCode);
+        const hasFog = fogCodes.includes(weatherCode);
 
         let weatherIcon = '☀️';
 
-        // المنطق الدقيق للإيموشنات
         if (hasSnow) {
             weatherIcon = '❄️'; 
         } else if (hasThunderAndRain) {
@@ -2235,7 +2220,7 @@
             weatherIcon = '🌫️'; 
           
         } else if (!isDayTime) {
-            // أوقات الليل (القمر والسحب الليلة) تتغير تلقائياً مع فصول السنة
+            // أوقات الليل والقمر تتغير تلقائياً طوال السنة
             if (cloudCover >= 70) {
                 weatherIcon = '☁️'; 
             } else if (cloudCover >= 20) {
@@ -2244,7 +2229,7 @@
                 weatherIcon = '🌙'; 
             }
         } else {
-            // أوقات النهار (الشمس وتدرجات الغيوم)
+            // أوقات النهار والشمس وتدرجات الغيوم
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; 
             } else if (cloudCover >= 50) {
@@ -2258,7 +2243,6 @@
             }
         }
 
-        // تحديث واجهة المستخدم بالنتائج
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2271,7 +2255,7 @@
         });
 
     } catch (error) {
-        console.warn("Weather Error:", error.message);
+        console.warn("Update Error:", error.message);
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2284,7 +2268,7 @@
         });
     }
 }
-
+    
 function setupWeatherClickEvents() {
     const allElements = [
         document.getElementById('weatherText'),
