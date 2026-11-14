@@ -2172,7 +2172,7 @@
     try {
         if (!navigator.geolocation) throw new Error("GPS غير مدعوم");
 
-        // جلب الإحداثيات بدقة عالية من الـ GPS
+        // جلب الإحداثيات بدقة عالية ومن خلال الـ GPS فقط
         const position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { 
                 timeout: 10000,              
@@ -2184,12 +2184,13 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // 1. رابط WeatherAPI مع مفتاحك الخاص (للأرقام فقط)
+        // 1. رابط WeatherAPI (للأرقام حصرياً)
         const weatherApiUrl = `https://api.weatherapi.com/v1/current.json?key=9d993e28dd084902964210918261211&q=${lat},${lon}&aqi=no`;
-        // 2. رابط Open-Meteo (للإيموشنات وحالة الجو فقط)
-        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m&timezone=auto`;
+        
+        // 2. رابط Open-Meteo (للإيموشنات والظواهر حصرياً)
+        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m&timezone=auto`;
 
-        // جلب البيانات من المصدرين في نفس اللحظة بأمان تام
+        // جلب البيانات من المصدرين في نفس اللحظة
         const [resWeather, resMeteo] = await Promise.all([
             fetch(weatherApiUrl).catch(() => null),
             fetch(openMeteoUrl).catch(() => null)
@@ -2198,42 +2199,31 @@
         let temp = null;
         let weatherCode = 0, isDayTime = true, cloudCover = 0, precip = 0, humidity = 0, windKph = 0;
 
-        // أولاً: سحب الرقم فقط من WeatherAPI مع حماية الـ JSON
+        // 1. سحب الرقم من WeatherAPI حصرياً
         if (resWeather && resWeather.ok) {
-            try {
-                const dataWeather = await resWeather.json();
-                if (dataWeather && dataWeather.current) {
-                    temp = Math.round(dataWeather.current.temp_c);
-                }
-            } catch (e) {
-                console.warn("WeatherAPI Parse Error:", e);
+            const dataWeather = await resWeather.json();
+            if (dataWeather && dataWeather.current) {
+                temp = Math.round(dataWeather.current.temp_c);
             }
         }
 
-        // ثانياً: سحب بيانات الإيموشنات من Open-Meteo مع حماية الـ JSON
+        // 2. سحب الإيموشنات من Open-Meteo حصرياً (بدون مساس بالرقم)
         if (resMeteo && resMeteo.ok) {
-            try {
-                const dataMeteo = await resMeteo.json();
-                if (dataMeteo && dataMeteo.current) {
-                    // احتياطي: لو حصل أي عطل في WeatherAPI ياخد الرقم من هنا
-                    if (temp === null) {
-                        temp = Math.round(dataMeteo.current.temperature_2m);
-                    }
-                    weatherCode = dataMeteo.current.weather_code ?? 0;
-                    isDayTime = dataMeteo.current.is_day === 1;
-                    cloudCover = dataMeteo.current.cloud_cover ?? 0;
-                    precip = dataMeteo.current.precipitation ?? 0;
-                    humidity = dataMeteo.current.relative_humidity_2m ?? 0;
-                    windKph = dataMeteo.current.wind_speed_10m ?? 0;
-                }
-            } catch (e) {
-                console.warn("Open-Meteo Parse Error:", e);
+            const dataMeteo = await resMeteo.json();
+            if (dataMeteo && dataMeteo.current) {
+                weatherCode = dataMeteo.current.weather_code ?? 0;
+                isDayTime = dataMeteo.current.is_day === 1;
+                cloudCover = dataMeteo.current.cloud_cover ?? 0;
+                precip = dataMeteo.current.precipitation ?? 0;
+                humidity = dataMeteo.current.relative_humidity_2m ?? 0;
+                windKph = dataMeteo.current.wind_speed_10m ?? 0;
             }
         }
 
-        if (temp === null) throw new Error("تعذر جلب بيانات الطقس من المصدرين");
+        // لو أي مصدر فيهم فشل أو مقدرش يجيب داتا، نوقف ونظهر خطأ بوضوح
+        if (temp === null) throw new Error("تعذر جلب الرقم من WeatherAPI");
 
-        // أكواد WMO المعيارية لتحديد الأيقونات بدقة متناهية
+        // أكواد WMO المعيارية لتحديد الإيموشنات بدقة تامة
         const snowCodes = [71, 73, 75, 77, 85, 86];
         const thunderCodes = [95, 96, 99];
         const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
@@ -2285,7 +2275,7 @@
             }
         }
 
-        // تحديث الواجهة بالنتائج النهائية
+        // تحديث الواجهة (الرقم نقي من WeatherAPI والإيموشن نقي من Open-Meteo)
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2298,7 +2288,7 @@
         });
 
     } catch (error) {
-        console.warn("Weather Hybrid Error:", error.message);
+        console.warn("Weather Error:", error.message);
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
