@@ -2172,7 +2172,7 @@
     try {
         if (!navigator.geolocation) throw new Error("GPS غير مدعوم");
 
-        // جلب الإحداثيات بدقة عالية ومن خلال الـ GPS فقط
+        // جلب الإحداثيات بدقة عالية من الـ GPS
         const position = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { 
                 timeout: 10000,              
@@ -2184,33 +2184,64 @@
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
 
-        // رابط Open-Meteo المباشر والدقيق
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m`;
-        
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("فشل الاتصال بخدمة الطقس");
-        
-        const data = await res.json();
-        if (!data || !data.current) throw new Error("بيانات الطقس غير متوفرة");
+        // 1. رابط WeatherAPI مع مفتاحك الخاص (للأرقام فقط)
+        const weatherApiUrl = `https://api.weatherapi.com/v1/current.json?key=9d993e28dd084902964210918261211&q=${lat},${lon}&aqi=no`;
+        // 2. رابط Open-Meteo (للإيموشنات وحالة الجو فقط)
+        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m&timezone=auto`;
 
-        const temp = Math.round(data.current.temperature_2m);
-        const weatherCode = data.current.weather_code; 
-        const isDayTime = data.current.is_day === 1; // يتغير تلقائياً مع أوقات الشروق والغروب طوال العام
-        const cloudCover = data.current.cloud_cover ?? 0;
-        const precip = data.current.precipitation ?? 0;
-        const humidity = data.current.relative_humidity_2m ?? 0;
-        const windKph = data.current.wind_speed_10m ?? 0;
+        // جلب البيانات من المصدرين في نفس اللحظة بأمان تام
+        const [resWeather, resMeteo] = await Promise.all([
+            fetch(weatherApiUrl).catch(() => null),
+            fetch(openMeteoUrl).catch(() => null)
+        ]);
 
-        // أكواد WMO المعيارية لـ Open-Meteo
+        let temp = null;
+        let weatherCode = 0, isDayTime = true, cloudCover = 0, precip = 0, humidity = 0, windKph = 0;
+
+        // أولاً: سحب الرقم فقط من WeatherAPI مع حماية الـ JSON
+        if (resWeather && resWeather.ok) {
+            try {
+                const dataWeather = await resWeather.json();
+                if (dataWeather && dataWeather.current) {
+                    temp = Math.round(dataWeather.current.temp_c);
+                }
+            } catch (e) {
+                console.warn("WeatherAPI Parse Error:", e);
+            }
+        }
+
+        // ثانياً: سحب بيانات الإيموشنات من Open-Meteo مع حماية الـ JSON
+        if (resMeteo && resMeteo.ok) {
+            try {
+                const dataMeteo = await resMeteo.json();
+                if (dataMeteo && dataMeteo.current) {
+                    // احتياطي: لو حصل أي عطل في WeatherAPI ياخد الرقم من هنا
+                    if (temp === null) {
+                        temp = Math.round(dataMeteo.current.temperature_2m);
+                    }
+                    weatherCode = dataMeteo.current.weather_code ?? 0;
+                    isDayTime = dataMeteo.current.is_day === 1;
+                    cloudCover = dataMeteo.current.cloud_cover ?? 0;
+                    precip = dataMeteo.current.precipitation ?? 0;
+                    humidity = dataMeteo.current.relative_humidity_2m ?? 0;
+                    windKph = dataMeteo.current.wind_speed_10m ?? 0;
+                }
+            } catch (e) {
+                console.warn("Open-Meteo Parse Error:", e);
+            }
+        }
+
+        if (temp === null) throw new Error("تعذر جلب بيانات الطقس من المصدرين");
+
+        // أكواد WMO المعيارية لتحديد الأيقونات بدقة متناهية
         const snowCodes = [71, 73, 75, 77, 85, 86];
         const thunderCodes = [95, 96, 99];
         const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
         const fogCodes = [45, 48];
 
-        // الشروط الدقيقة والصارمة لمنع الأيقونات الوهمية أو الخاطئة
         const hasSnow = snowCodes.includes(weatherCode) && temp <= 0;
         const hasThunder = thunderCodes.includes(weatherCode);
-        const hasRain = (precip >= 1.0 || rainCodes.includes(weatherCode)); // عتبة المطر الفعلي المؤثر
+        const hasRain = (precip >= 1.0 || rainCodes.includes(weatherCode));
         const hasThunderAndRain = hasThunder && hasRain;
         const hasRainWithSun = hasRain && cloudCover < 50 && isDayTime;
         const hasDust = humidity < 20 && windKph > 35;
@@ -2218,7 +2249,6 @@
 
         let weatherIcon = '☀️';
 
-        // ترتيب منطق الأيقونات بدقة متناهية
         if (hasSnow) {
             weatherIcon = '❄️'; 
         } else if (hasThunderAndRain) {
@@ -2234,7 +2264,6 @@
         } else if (hasFog) {
             weatherIcon = '🌫️'; 
         } else if (!isDayTime) {
-            // أوقات الليل (القمر والسحب الليلة تتغير أوتوماتيكياً مع الفصول)
             if (cloudCover >= 70) {
                 weatherIcon = '☁️'; 
             } else if (cloudCover >= 20) {
@@ -2243,7 +2272,6 @@
                 weatherIcon = '🌙'; 
             }
         } else {
-            // أوقات النهار (الشمس وتدرجات الغيوم بدقة)
             if (cloudCover >= 80) {
                 weatherIcon = '☁️'; 
             } else if (cloudCover >= 50) {
@@ -2257,7 +2285,7 @@
             }
         }
 
-        // تحديث واجهة المستخدم بالنتائج النهائية
+        // تحديث الواجهة بالنتائج النهائية
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-xl sm:text-2xl font-black text-yellow-400 leading-tight whitespace-nowrap";
@@ -2270,7 +2298,7 @@
         });
 
     } catch (error) {
-        console.warn("Open-Meteo Error:", error.message);
+        console.warn("Weather Hybrid Error:", error.message);
         elements.forEach(el => {
             if (el.text) {
                 el.text.className = "text-base sm:text-lg font-black text-yellow-400 leading-tight whitespace-nowrap";
